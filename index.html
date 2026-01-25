@@ -1,1 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mini Escape Room VR</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+  <script>
+    let hasKey = false;
+
+    AFRAME.registerComponent('pick-key', {
+      init: function () {
+        this.el.addEventListener('click', () => {
+          hasKey = true;
+          this.el.setAttribute('visible', false);
+          alert('Πήρες το κλειδί!');
+        });
+      }
+    });
+
+    AFRAME.registerComponent('open-door', {
+      init: function () {
+        this.el.addEventListener('click', () => {
+          if (hasKey) {
+            this.el.setAttribute('rotation', '0 90 0');
+            alert('Η πόρτα άνοιξε. Μπράβο!');
+          } else {
+            alert('Χρειάζεσαι κλειδί!');
+          }
+        });
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <a-scene>
+
+    <!-- Πάτωμα -->
+    <a-plane rotation="-90 0 0" width="10" height="10" color="#7BC8A4"></a-plane>
+
+    <!-- Τοίχος -->
+    <a-box position="0 1 -4" width="10" height="2" depth="0.2" color="#AAA"></a-box>
+
+    <!-- Πόρτα -->
+    <a-box position="0 1 -3.9" width="1" height="2" depth="0.1"
+           color="brown" open-door></a-box>
+
+    <!-- Κλειδί -->
+    <a-box position="2 0.5 -2" width="0.3" height="0.3" depth="0.1"
+           color="gold" pick-key></a-box>
+
+    <!-- Κάμερα + cursor -->
+    <a-camera position="0 1.6 3">
+      <a-cursor></a-cursor>
+    </a-camera>
+
+  </a-scene>
+</body>
+</html>
 
