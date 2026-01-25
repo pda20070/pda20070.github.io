@@ -21,7 +21,7 @@
           document.querySelector('#message')
             .setAttribute('value', 'Πήρες το κλειδί! Η πόρτα ξεκλειδώθηκε.');
 
-          document.querySelector('#keySound').play();
+          this.el.components.sound.playSound();
         });
       }
     });
@@ -33,7 +33,7 @@
             this.el.setAttribute('rotation', '0 90 0');
             document.querySelector('#message')
               .setAttribute('value', 'Συγχαρητήρια! Διέφυγες!');
-            document.querySelector('#doorSound').play();
+            this.el.components.sound.playSound();
           } else {
             document.querySelector('#message')
               .setAttribute('value', 'Χρειάζεσαι κλειδί!');
@@ -67,15 +67,6 @@
     <a-light type="ambient" intensity="0.5"></a-light>
     <a-light type="point" position="0 4 2" intensity="1"></a-light>
 
-    <!-- Ήχοι -->
-    <a-entity id="keySound"
-      sound="src: https://cdn.aframe.io/basic-guide/audio/click.ogg">
-    </a-entity>
-
-    <a-entity id="doorSound"
-      sound="src: https://cdn.aframe.io/basic-guide/audio/door.ogg">
-    </a-entity>
-
     <!-- Πάτωμα -->
     <a-plane rotation="-90 0 0" width="10" height="10" color="#7BC8A4"></a-plane>
 
@@ -89,7 +80,8 @@
            height="2"
            depth="0.1"
            color="brown"
-           open-door>
+           open-door
+           sound="src: https://cdn.aframe.io/basic-guide/audio/door.ogg">
     </a-box>
 
     <!-- Κλειδί -->
@@ -98,7 +90,8 @@
            height="0.3"
            depth="0.1"
            color="gold"
-           pick-key>
+           pick-key
+           sound="src: https://cdn.aframe.io/basic-guide/audio/click.ogg">
     </a-box>
 
     <!-- Μήνυμα -->
