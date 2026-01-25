@@ -21,7 +21,7 @@
           document.querySelector('#message')
             .setAttribute('value', 'Πήρες το κλειδί! Η πόρτα ξεκλειδώθηκε.');
 
-          this.el.components.sound.playSound();
+          document.querySelector('#keySound').components.sound.playSound();
         });
       }
     });
@@ -33,7 +33,8 @@
             this.el.setAttribute('rotation', '0 90 0');
             document.querySelector('#message')
               .setAttribute('value', 'Συγχαρητήρια! Διέφυγες!');
-            this.el.components.sound.playSound();
+
+            document.querySelector('#doorSound').components.sound.playSound();
           } else {
             document.querySelector('#message')
               .setAttribute('value', 'Χρειάζεσαι κλειδί!');
@@ -63,9 +64,19 @@
 <body>
   <a-scene>
 
+    <!-- Assets (ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ) -->
+    <a-assets>
+      <audio id="key-audio" src="https://cdn.aframe.io/basic-guide/audio/click.ogg"></audio>
+      <audio id="door-audio" src="https://cdn.aframe.io/basic-guide/audio/door.ogg"></audio>
+    </a-assets>
+
     <!-- Φωτισμός -->
     <a-light type="ambient" intensity="0.5"></a-light>
     <a-light type="point" position="0 4 2" intensity="1"></a-light>
+
+    <!-- Ήχοι -->
+    <a-entity id="keySound" sound="src: #key-audio"></a-entity>
+    <a-entity id="doorSound" sound="src: #door-audio"></a-entity>
 
     <!-- Πάτωμα -->
     <a-plane rotation="-90 0 0" width="10" height="10" color="#7BC8A4"></a-plane>
@@ -80,8 +91,7 @@
            height="2"
            depth="0.1"
            color="brown"
-           open-door
-           sound="src: https://cdn.aframe.io/basic-guide/audio/door.ogg">
+           open-door>
     </a-box>
 
     <!-- Κλειδί -->
@@ -90,8 +100,7 @@
            height="0.3"
            depth="0.1"
            color="gold"
-           pick-key
-           sound="src: https://cdn.aframe.io/basic-guide/audio/click.ogg">
+           pick-key>
     </a-box>
 
     <!-- Μήνυμα -->
