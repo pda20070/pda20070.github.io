@@ -2,96 +2,46 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Escape Room – Power Failure</title>
+  <title>Mini Escape Room</title>
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
 </head>
 
 <body>
 <a-scene>
 
+  <!-- ΦΩΤΑ -->
+  <a-light type="ambient" intensity="0.4"></a-light>
+  <a-light type="point" intensity="0.8" position="0 3 2"></a-light>
+
   <!-- ΔΩΜΑΤΙΟ -->
-  <a-box position="0 2 -5" depth="10" height="4" width="10" color="#777" material="side: back"></a-box>
-  <a-plane rotation="-90 0 0" width="10" height="10" color="#444"></a-plane>
+  <a-plane rotation="-90 0 0" width="12" height="12" color="#555"></a-plane>
+  <a-box position="0 2 -6" depth="12" height="4" width="12" material="side: back" color="#888"></a-box>
 
   <!-- ΠΟΡΤΑ -->
-  <a-box id="exit"
-         position="0 1 -9.9"
+  <a-box id="door"
+         position="0 1 -5.9"
          height="2"
          width="1"
          depth="0.1"
          color="red"
-         locked></a-box>
+         door></a-box>
 
-  <!-- ΓΕΝΝΗΤΡΙΑ -->
-  <a-box id="generator"
-         position="-3 0.5 -3"
-         height="1"
-         width="1"
-         depth="1"
-         color="black"
-         generator></a-box>
+  <!-- ΚΛΕΙΔΙ -->
+  <a-cylinder id="key"
+              position="3 0.3 -2"
+              radius="0.05"
+              height="0.3"
+              color="gold"
+              key></a-cylinder>
 
-  <!-- ΜΠΑΤΑΡΙΑ -->
-  <a-cylinder id="battery"
-              position="3 0.3 -3"
-              radius="0.15"
-              height="0.5"
-              color="yellow"
-              pickup></a-cylinder>
+  <!-- ΜΗΝΥΜΑ -->
+  <a-text id="msg"
+          value="Find the key"
+          position="0 2 -2"
+          align="center"
+          width="4"
+          color="white"></a-text>
 
-  <!-- ΚΑΜΕΡΑ -->
-  <a-camera position="0 1.6 3">
-    <a-cursor></a-cursor>
-  </a-camera>
-
-</a-scene>
-
-<script>
-let hasBattery = false;
-
-AFRAME.registerComponent('pickup', {
-  init: function () {
-    this.el.addEventListener('click', () => {
-      hasBattery = true;
-      this.el.setAttribute('visible', false);
-    });
-  }
-});
-
-AFRAME.registerComponent('generator', {
-  init: function () {
-    this.el.addEventListener('click', () => {
-      if (hasBattery) {
-        this.el.setAttribute('color', 'green');
-        document.getElementById('exit').removeAttribute('locked');
-      }
-    });
-  }
-});
-
-AFRAME.registerComponent('locked', {
-  init: function () {
-    this.el.addEventListener('click', () => {
-      alert("The door has no power.");
-    });
-  }
-});
-
-AFRAME.registerComponent('unlocked', {
-  init: function () {
-    this.el.addEventListener('click', () => {
-      alert("You escaped!");
-    });
-  }
-});
-
-document.getElementById('exit').addEventListener('componentremoved', e => {
-  if (e.detail.name === 'locked') {
-    document.getElementById('exit').setAttribute('unlocked', '');
-    document.getElementById('exit').setAttribute('color', 'green');
-  }
-});
-</script>
-
-</body>
-</html>
+  <!-- CAMERA + MOVEMENT -->
+  <a-entity position="0 1.6 4"
+            mo
