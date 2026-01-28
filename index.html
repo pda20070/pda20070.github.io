@@ -5,58 +5,79 @@
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.2/dist/aframe-physics-system.min.js"></script>
     
     <script>
-      // Ενότητα 4: Δημιουργία Component για αλληλεπίδραση [cite: 49, 50]
       AFRAME.registerComponent('door-unlock', {
         init: function () {
           var el = this.el;
           el.addEventListener('click', function () {
-            // Όταν κάνουμε κλικ στο κλειδί, η πόρτα ανοίγει (εξαφανίζεται)
+            // Παίζει ο ήχος ξεκλειδώματος
+            var soundEl = document.querySelector('#unlock-sound');
+            soundEl.components.sound.playSound();
+
+            // Η πόρτα εξαφανίζεται
             document.querySelector('#exit-door').setAttribute('visible', 'false');
             document.querySelector('#exit-door').removeAttribute('static-body');
-            alert("Η πόρτα ξεκλείδωσε!");
-          });
-          
-          // Feedback όταν περνάει το ποντίκι (mouseenter/mouseleave) [cite: 51]
-          el.addEventListener('mouseenter', function () {
-            el.setAttribute('color', '#FFD700'); // Χρυσό χρώμα
-          });
-          el.addEventListener('mouseleave', function () {
-            el.setAttribute('color', 'orange');
+            
+            alert("Η πόρτα άνοιξε... Τρέξε πριν σε προλάβει!");
           });
         }
       });
     </script>
   </head>
   <body>
-    <a-scene physics="debug: false" cursor="rayOrigin: mouse">
+    <a-scene physics="debug: false" cursor="rayOrigin: mouse" fog="type: exponential; color: #000; density: 0.25">
       
-      <a-sky color="#222"></a-sky>
-      <a-plane static-body position="0 0 0" rotation="-90 0 0" width="20" height="20" color="#333"></a-plane>
+      <a-assets>
+        <audio id="ambient-noise" src="https://cdn.aframe.io/basic-guide/audio/backgroundnoise.wav" preload="auto"></audio>
+        <audio id="click-noise" src="https://actions.google.com/sounds/v1/doors/door_knocker_fast.ogg" preload="auto"></audio>
+        
+        <a-asset-item id="monster-model" src="https://cdn.aframe.io/examples/ar/models/triceratops/scene.gltf"></a-asset-item>
+      </a-assets>
 
-      <a-box static-body position="0 2.5 -5" width="10" height="5" depth="0.5" color="#555"></a-box> <a-box static-body position="0 2.5 5" width="10" height="5" depth="0.5" color="#555"></a-box>  <a-box static-body position="-5 2.5 0" width="0.5" height="5" depth="10" color="#555"></a-box> <a-box static-body position="5 2.5 0" width="0.5" height="5" depth="10" color="#555"></a-box>  <a-box id="exit-door" static-body position="0 1.5 -4.7" width="2" height="3" depth="0.2" color="#442200"></a-box>
+      <a-entity sound="src: #ambient-noise; autoplay: true; loop: true; volume: 0.5"></a-entity>
+      
+      <a-entity id="unlock-sound" sound="src: #click-noise"></a-entity>
 
-      <a-box door-unlock position="-4 0.5 4" width="0.3" height="0.3" depth="0.3" color="orange" dynamic-body></a-box>
-
-      <a-entity id="obstacles"></a-entity>
+      <a-sky color="#000"></a-sky>
 
       <a-entity camera look-controls wasd-controls position="0 1.6 0">
-        <a-sphere static-body position="0 -1 -1" radius="0.2" color="gray" opacity="0.5"></a-sphere>
+          <a-entity light="type: spot; angle: 30; penumbra: 0.3; intensity: 2; distance: 15" position="0 0 0"></a-entity>
+          <a-cursor color="white"></a-cursor>
       </a-entity>
 
+      <a-plane static-body position="0 0 0" rotation="-90 0 0" width="30" height="30" color="#050505"></a-plane>
+      <a-box static-body position="0 2.5 -10" width="20" height="5" depth="0.5" color="#111"></a-box>
+      <a-box static-body position="0 2.5 10" width="20" height="5" depth="0.5" color="#111"></a-box>
+      <a-box static-body position="-10 2.5 0" width="0.5" height="5" depth="20" color="#111"></a-box>
+      <a-box static-body position="10 2.5 0" width="0.5" height="5" depth="20" color="#111"></a-box>
+
+      <a-box id="exit-door" static-body position="0 1.5 -9.8" width="3" height="4" depth="0.2" color="#3a1f04"></a-box>
+
+      <a-entity id="monster" 
+                gltf-model="#monster-model" 
+                position="-7 0 -7" 
+                scale="0.01 0.01 0.01" 
+                rotation="0 135 0"
+                animation="property: position; dir: alternate; dur: 2000; easing: easeInOutSine; loop: true; to: -7 0.5 -7">
+      </a-entity>
+
+      <a-box door-unlock position="8 0.5 8" width="0.4" height="0.4" depth="0.4" color="orange" dynamic-body></a-box>
+
+      <a-entity id="maze"></a-entity>
     </a-scene>
 
     <script>
-      // Ενότητα 3: Δημιουργία τυχαίων κύβων στο δωμάτιο [cite: 32, 36]
-      var obsContainer = document.getElementById('obstacles');
-      for (var i = 0; i < 10; i++) {
+      var mazeContainer = document.getElementById('maze');
+      for (var i = 0; i < 50; i++) {
         var box = document.createElement('a-box');
-        var x = Math.random() * 8 - 4;
-        var z = Math.random() * 8 - 4;
-        box.setAttribute('position', x + ' 0.5 ' + z);
-        box.setAttribute('dynamic-body', 'mass: 1');
-        box.setAttribute('color', 'silver');
-        box.setAttribute('scale', '0.5 0.5 0.5');
-        obsContainer.appendChild(box);
+        var x = Math.random() * 18 - 9;
+        var z = Math.random() * 18 - 9;
+        if (Math.abs(x) > 2 || Math.abs(z) > 2) {
+            box.setAttribute('position', x + ' 1 ' + z);
+            box.setAttribute('static-body', '');
+            box.setAttribute('color', '#222');
+            box.setAttribute('scale', '1 2 1');
+            mazeContainer.appendChild(box);
+        }
       }
     </script>
   </body>
