@@ -1,179 +1,92 @@
 <!DOCTYPE html>
-<html lang="el">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Escape Room</title>
-<style>
-    body {
-        margin: 0;
-        background: #111;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        color: white;
-        font-family: Arial;
-    }
-    canvas {
-        background: #2c2c2c;
-        border: 3px solid #fff;
-    }
-</style>
+  <meta charset="utf-8">
+  <title>Escape Room A-Frame</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 </head>
-<body>
 
-<canvas id="game" width="800" height="500"></canvas>
+<body>
+<a-scene>
+
+  <!-- ⏱️ TIMER -->
+  <a-text id="timer" value="Χρόνος: 60"
+          position="-1 2 -3"
+          color="red"></a-text>
+
+  <!-- 👤 PLAYER -->
+  <a-entity id="player"
+            position="0 1.6 4"
+            camera
+            look-controls
+            wasd-controls></a-entity>
+
+  <!-- 🟫 FLOOR -->
+  <a-plane rotation="-90 0 0"
+           width="10"
+           height="10"
+           color="#555"></a-plane>
+
+  <!-- 🧱 WALLS -->
+  <a-box position="0 1 -5" width="10" height="3" depth="0.2" color="#888"></a-box>
+  <a-box position="0 1 5"  width="10" height="3" depth="0.2" color="#888"></a-box>
+  <a-box position="-5 1 0" width="0.2" height="3" depth="10" color="#888"></a-box>
+  <a-box position="5 1 0"  width="0.2" height="3" depth="10" color="#888"></a-box>
+
+  <!-- 🪑 OBSTACLES -->
+  <a-box position="-2 0.5 0" width="1" height="1" depth="1" color="#8b5a2b"></a-box>
+  <a-box position="2 0.5 -1" width="1.5" height="0.7" depth="1" color="#654321"></a-box>
+
+  <!-- 🔑 KEY -->
+  <a-sphere id="key"
+            position="0 0.5 -3"
+            radius="0.2"
+            color="gold"></a-sphere>
+
+  <!-- 🚪 DOOR -->
+  <a-box id="door"
+         position="0 1 -4.9"
+         width="1"
+         height="2"
+         depth="0.1"
+         color="brown"></a-box>
+
+</a-scene>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+let time = 60;
+let hasKey = false;
 
-// ⏱️ TIMER
-let timeLeft = 60;
+const timerText = document.getElementById("timer");
+const key = document.getElementById("key");
+const door = document.getElementById("door");
+const player = document.getElementById("player");
+
 setInterval(() => {
-    timeLeft--;
-    if (timeLeft <= 0) {
-        alert("⏱️ Τέλος χρόνου! Έχασες!");
-        location.reload();
-    }
+  time--;
+  timerText.setAttribute("value", "Χρόνος: " + time);
+  if (time <= 0) {
+    alert("⏱️ Τέλος χρόνου!");
+    location.reload();
+  }
 }, 1000);
 
-// Player
-const player = {
-    x: 50,
-    y: 400,
-    size: 20,
-    speed: 3,
-    hasKey: false
-};
+// Pick up key
+key.addEventListener("mouseenter", () => {
+  hasKey = true;
+  key.setAttribute("visible", "false");
+  alert("🔑 Πήρες το κλειδί!");
+});
 
-// Obstacles
-const obstacles = [
-    {x:150,y:350,w:80,h:40},
-    {x:300,y:300,w:40,h:40},
-    {x:500,y:350,w:60,h:30},
-    {x:200,y:200,w:100,h:40},
-    {x:400,y:150,w:40,h:40}
-];
-
-// Ladder
-const ladder = {x:700,y:300,w:30,h:120};
-
-// Door & key
-const door = {x:700,y:50,w:60,h:80};
-const key = {x:715,y:140,size:15, taken:false};
-
-// Controls
-const keys = {};
-window.addEventListener("keydown", e => keys[e.key] = true);
-window.addEventListener("keyup", e => keys[e.key] = false);
-
-function collision(a, b) {
-    return a.x < b.x + b.w &&
-           a.x + a.size > b.x &&
-           a.y < b.y + b.h &&
-           a.y + a.size > b.y;
-}
-
-function update() {
-    let nx = player.x;
-    let ny = player.y;
-
-    if (keys["w"] || keys["ArrowUp"]) ny -= player.speed;
-    if (keys["s"] || keys["ArrowDown"]) ny += player.speed;
-    if (keys["a"] || keys["ArrowLeft"]) nx -= player.speed;
-    if (keys["d"] || keys["ArrowRight"]) nx += player.speed;
-
-    const future = {x:nx,y:ny,size:player.size};
-
-    let blocked = false;
-    obstacles.forEach(o => {
-        if (collision(future,{x:o.x,y:o.y,w:o.w,h:o.h})) blocked = true;
-    });
-
-    if (!blocked) {
-        player.x = nx;
-        player.y = ny;
-    }
-
-    // Ladder
-    if (collision(player,{x:ladder.x,y:ladder.y,w:ladder.w,h:ladder.h})) {
-        player.y -= 1;
-    }
-
-    // Key
-    if (!key.taken &&
-        Math.hypot(player.x-key.x, player.y-key.y) < 20) {
-        key.taken = true;
-        player.hasKey = true;
-        alert("🔑 Πήρες το κλειδί!");
-    }
-
-    // Door
-    if (collision(player,door)) {
-        if (player.hasKey) {
-            alert("🎉 ESCAPED με χρόνο " + timeLeft + "s!");
-            location.reload();
-        } else {
-            alert("❌ Χρειάζεσαι το κλειδί!");
-            player.y += 20;
-        }
-    }
-}
-
-function drawFog() {
-    ctx.fillStyle = "rgba(0,0,0,0.85)";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.arc(player.x+10, player.y+10, 120, 0, Math.PI*2);
-    ctx.fill();
-    ctx.globalCompositeOperation = "source-over";
-}
-
-function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    // Obstacles
-    ctx.fillStyle = "#8b5a2b";
-    obstacles.forEach(o => ctx.fillRect(o.x,o.y,o.w,o.h));
-
-    // Ladder
-    ctx.fillStyle = "#aaa";
-    ctx.fillRect(ladder.x,ladder.y,ladder.w,ladder.h);
-
-    // Door
-    ctx.fillStyle = "#552200";
-    ctx.fillRect(door.x,door.y,door.w,door.h);
-
-    // Key
-    if (!key.taken) {
-        ctx.fillStyle = "gold";
-        ctx.beginPath();
-        ctx.arc(key.x,key.y,key.size,0,Math.PI*2);
-        ctx.fill();
-    }
-
-    // Player
-    ctx.fillStyle = "#00ffcc";
-    ctx.fillRect(player.x,player.y,player.size,player.size);
-
-    // ⏱️ TIMER DISPLAY
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.fillText("Χρόνος: " + timeLeft + "s", 10, 25);
-
-    drawFog();
-}
-
-function loop() {
-    update();
-    draw();
-    requestAnimationFrame(loop);
-}
-
-loop();
+// Door logic
+door.addEventListener("mouseenter", () => {
+  if (hasKey) {
+    alert("🎉 ESCAPED!");
+    location.reload();
+  } else {
+    alert("❌ Χρειάζεσαι το κλειδί!");
+  }
+});
 </script>
 
 </body>
