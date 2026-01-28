@@ -2,42 +2,46 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Mini Escape Room VR</title>
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <title>Escape Room VR</title>
+
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://c-frame.github.io/aframe-physics-system/dist/aframe-physics-system.min.js"></script>
 
   <script>
     let hasKey = false;
-    let timeLeft = 30;
+    let hasTorch = false;
+    let timeLeft = 60;
 
-    AFRAME.registerComponent('pick-key', {
+    AFRAME.registerComponent('pickable', {
       init: function () {
-        this.el.addEventListener('click', () => {
-          hasKey = true;
-          this.el.setAttribute('visible', false);
+        this.el.addEventListener('mouseenter', () => {
+          const id = this.el.id;
 
-          document.querySelector('#door')
-            .setAttribute('color', 'green');
+          if (id === 'torch') {
+            hasTorch = true;
+            document.querySelector('#scene')
+              .setAttribute('fog', 'color: #222; far: 1000');
+          }
 
-          document.querySelector('#message')
-            .setAttribute('value', 'Πήρες το κλειδί! Η πόρτα ξεκλειδώθηκε.');
+          if (id === 'key') {
+            hasKey = true;
+          }
 
-          document.querySelector('#keySound').components.sound.playSound();
+          this.el.parentNode.removeChild(this.el);
         });
       }
     });
 
-    AFRAME.registerComponent('open-door', {
+    AFRAME.registerComponent('door', {
       init: function () {
-        this.el.addEventListener('click', () => {
+        this.el.addEventListener('mouseenter', () => {
           if (hasKey) {
             this.el.setAttribute('rotation', '0 90 0');
-            document.querySelector('#message')
-              .setAttribute('value', 'Συγχαρητήρια! Διέφυγες!');
-
-            document.querySelector('#doorSound').components.sound.playSound();
+            document.querySelector('#msg')
+              .setAttribute('value', 'Διέφυγες επιτυχώς!');
           } else {
-            document.querySelector('#message')
-              .setAttribute('value', 'Χρειάζεσαι κλειδί!');
+            document.querySelector('#msg')
+              .setAttribute('value', 'Η πόρτα είναι κλειδωμένη...');
           }
         });
       }
@@ -52,8 +56,8 @@
             el.setAttribute('value', 'Χρόνος: ' + timeLeft);
           } else {
             el.setAttribute('value', 'Τέλος χρόνου!');
-            document.querySelector('#message')
-              .setAttribute('value', 'Απέτυχες να δραπετεύσεις...');
+            document.querySelector('#msg')
+              .setAttribute('value', 'Απέτυχες να δραπετεύσεις');
           }
         }, 1000);
       }
@@ -62,127 +66,81 @@
 </head>
 
 <body>
-  <a-scene>
+<a-scene id="scene"
+         fog="color: #222; near: 1; far: 5"
+         physics>
 
-    <!-- Assets (ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ) -->
-    <a-assets>
-      <audio id="key-audio" src="https://cdn.aframe.io/basic-guide/audio/click.ogg"></audio>
-      <audio id="door-audio" src="https://cdn.aframe.io/basic-guide/audio/door.ogg"></audio>
-    </a-assets>
+  <!-- ΦΩΤΑ -->
+  <a-light type="ambient" intensity="0.4"></a-light>
+  <a-light type="point" position="0 6 0" intensity="1"></a-light>
 
-    <!-- Φωτισμός -->
-    <a-light type="ambient" intensity="0.5"></a-light>
-    <a-light type="point" position="0 4 2" intensity="1"></a-light>
+  <!-- ΔΩΜΑΤΙΟ -->
+  <a-plane static-body rotation="-90 0 0" width="40" height="40" color="#444"></a-plane>
+  <a-plane static-body position="0 4 -20" width="40" height="8" color="#666"></a-plane>
+  <a-plane static-body position="0 4 20" rotation="0 180 0" width="40" height="8" color="#666"></a-plane>
+  <a-plane static-body position="-20 4 0" rotation="0 90 0" width="40" height="8" color="#555"></a-plane>
+  <a-plane static-body position="20 4 0" rotation="0 -90 0" width="40" height="8" color="#555"></a-plane>
 
-    <!-- Ήχοι -->
-    <a-entity id="keySound" sound="src: #key-audio"></a-entity>
-    <a-entity id="doorSound" sound="src: #door-audio"></a-entity>
+  <!-- ΣΚΑΛΑ -->
+  <a-box static-body color="#8b5a2b" scale="1 2 3" position="0 1 -15"></a-box>
+  <a-box static-body color="#8b5a2b" scale="1 2 3" position="0 3 -17"></a-box>
 
-    <!-- Πάτωμα -->
-    <a-plane rotation="-90 0 0" width="10" height="10" color="#7BC8A4"></a-plane>
+  <!-- ΠΟΡΤΑ -->
+  <a-box id="door"
+         position="0 5 -19.8"
+         width="2"
+         height="3"
+         depth="0.2"
+         color="darkgreen"
+         door></a-box>
 
-    <!-- Τοίχος -->
-    <a-box position="0 1 -4" width="10" height="2" depth="0.2" color="#AAA"></a-box>
+  <!-- ΚΛΕΙΔΙ -->
+  <a-cylinder id="key"
+              position="0 4.8 -18"
+              radius="0.05"
+              height="0.3"
+              color="gold"
+              pickable></a-cylinder>
 
-    <!-- Πόρτα -->
-    <a-box id="door"
-           position="0 1 -3.9"
-           width="1"
-           height="2"
-           depth="0.1"
-           color="brown"
-           open-door>
-    </a-box>
+  <!-- ΦΑΚΟΣ -->
+  <a-cylinder id="torch"
+              position="5 1 -5"
+              radius="0.15"
+              height="0.5"
+              color="black"
+              pickable>
+    <a-light type="spot" intensity="0.8" angle="25" position="0 0.3 0"></a-light>
+  </a-cylinder>
 
-    <!-- Κλειδί -->
-    <a-box position="2 0.5 -2"
-           width="0.3"
-           height="0.3"
-           depth="0.1"
-           color="gold"
-           pick-key>
-    </a-box>
+  <!-- ΤΡΑΠΕΖΙΑ -->
+  <a-box static-body color="brown" scale="3 0.2 3" position="-6 1 -6"></a-box>
+  <a-box static-body color="brown" scale="3 0.2 3" position="6 1 6"></a-box>
 
-    <!-- Μήνυμα -->
-    <a-text id="message"
-            value="Βρες το κλειδί για να φύγεις!"
-            position="-1.5 2 -2"
-            color="black"
-            width="4">
-    </a-text>
+  <!-- ΚΑΡΕΚΛΕΣ -->
+  <a-box static-body color="#5a3a1a" scale="1 0.2 1" position="-8 0.6 -6"></a-box>
+  <a-box static-body color="#5a3a1a" scale="1 0.2 1" position="8 0.6 6"></a-box>
 
-    <!-- Χρονόμετρο -->
-    <a-text position="1.2 2 -2"
-            color="red"
-            width="4"
-            timer>
-    </a-text>
+  <!-- ΜΗΝΥΜΑ -->
+  <a-text id="msg"
+          value="Βρες τον φακό και το κλειδί"
+          position="-2 2 -3"
+          width="4"
+          color="white"></a-text>
 
-    <!-- -------------------------- ΝΕΑ ΑΝΤΙΚΕΙΜΕΝΑ -------------------------- -->
+  <!-- TIMER -->
+  <a-text position="2 2 -3"
+          width="4"
+          color="red"
+          timer></a-text>
 
-    <!-- 🟫 Κουτί -->
-    <a-box position="-3 0.5 -2"
-           width="1"
-           height="1"
-           depth="1"
-           color="#8B4513"></a-box>
+  <!-- CAMERA -->
+  <a-entity position="0 1.6 10"
+            camera
+            look-controls
+            wasd-controls>
+    <a-cursor fuse="true" color="yellow"></a-cursor>
+  </a-entity>
 
-    <!-- 🍽️ Τραπέζι -->
-    <a-box position="2 0.4 -3"
-           width="2"
-           height="0.2"
-           depth="1"
-           color="#654321"></a-box>
-    <!-- Πόδια τραπεζιού -->
-    <a-box position="1.2 0.2 -3"
-           width="0.1"
-           height="0.4"
-           depth="0.1"
-           color="#333"></a-box>
-    <a-box position="2.8 0.2 -3"
-           width="0.1"
-           height="0.4"
-           depth="0.1"
-           color="#333"></a-box>
-
-    <!-- 🪑 Καρέκλα -->
-    <a-box position="2 0.25 -1.5"
-           width="0.6"
-           height="0.1"
-           depth="0.6"
-           color="#444"></a-box>
-    <a-box position="2 0.6 -1.9"
-           width="0.6"
-           height="0.6"
-           depth="0.1"
-           color="#555"></a-box>
-
-    <!-- 🪜 Σκάλα -->
-    <a-box position="-4 0.25 -4"
-           width="1"
-           height="0.1"
-           depth="0.4"
-           color="#aaa"></a-box>
-    <a-box position="-4 0.45 -4"
-           width="1"
-           height="0.1"
-           depth="0.4"
-           color="#aaa"></a-box>
-    <a-box position="-4 0.65 -4"
-           width="1"
-           height="0.1"
-           depth="0.4"
-           color="#aaa"></a-box>
-
-    <!-- ---------------------------------------------------------------------- -->
-
-    <!-- Κάμερα + Cursor -->
-    <a-entity position="0 1.6 3">
-      <a-camera wasd-controls look-controls>
-        <a-cursor></a-cursor>
-      </a-camera>
-    </a-entity>
-
-  </a-scene>
+</a-scene>
 </body>
 </html>
