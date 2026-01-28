@@ -10,6 +10,7 @@
   <script>
     let hasKey = false;
     let hasTorch = false;
+    let boxUnlocked = false;
     let timeLeft = 60;
 
     /* TIMER */
@@ -23,7 +24,7 @@
           } else {
             el.setAttribute('value', 'Τέλος χρόνου!');
             document.querySelector('#msg')
-              .setAttribute('value', 'Απέτυχες να δραπετεύσεις');
+              .setAttribute('value', 'Game Over...');
           }
         }, 1000);
       }
@@ -53,6 +54,31 @@
       }
     });
 
+    /* ΚΟΥΜΠΙ */
+    AFRAME.registerComponent('button', {
+      init: function () {
+        this.el.addEventListener('mouseenter', () => {
+          if (!boxUnlocked && hasTorch) {
+            boxUnlocked = true;
+
+            document.querySelector('#box')
+              .setAttribute('animation',
+                'property: scale; to: 1 0.2 1; dur: 800');
+
+            document.querySelector('#key')
+              .setAttribute('visible', true);
+
+            document.querySelector('#msg')
+              .setAttribute('value', 'Το κουτί άνοιξε!');
+          }
+          else if (!hasTorch) {
+            document.querySelector('#msg')
+              .setAttribute('value', 'Δεν βλέπεις καλά...');
+          }
+        });
+      }
+    });
+
     /* ΠΟΡΤΑ */
     AFRAME.registerComponent('door', {
       init: function () {
@@ -65,35 +91,6 @@
             document.querySelector('#msg')
               .setAttribute('value', 'Η πόρτα είναι κλειδωμένη...');
           }
-        });
-      }
-    });
-
-    /* ΔΙΑΔΡΑΣΤΙΚΑ ΑΝΤΙΚΕΙΜΕΝΑ */
-    AFRAME.registerComponent('interactable', {
-      init: function () {
-        this.el.addEventListener('mouseenter', () => {
-          this.el.setAttribute('color', '#c68642');
-          document.querySelector('#msg')
-            .setAttribute('value', 'Κάτι περίεργο υπάρχει εδώ...');
-        });
-      }
-    });
-
-    AFRAME.registerComponent('movable', {
-      init: function () {
-        this.el.addEventListener('mouseenter', () => {
-          this.el.setAttribute('animation',
-            'property: position; to: 8 1 -4; dur: 1000');
-        });
-      }
-    });
-
-    AFRAME.registerComponent('fallable', {
-      init: function () {
-        this.el.addEventListener('mouseenter', () => {
-          this.el.setAttribute('animation',
-            'property: rotation; to: 90 0 0; dur: 800');
         });
       }
     });
@@ -130,12 +127,30 @@
          color="darkgreen"
          door></a-box>
 
-  <!-- ΚΛΕΙΔΙ -->
+  <!-- ΚΟΥΜΠΙ -->
+  <a-box id="button"
+         position="-6 1.5 -10"
+         width="0.4"
+         height="0.4"
+         depth="0.2"
+         color="red"
+         button></a-box>
+
+  <!-- ΚΟΥΤΙ -->
+  <a-box id="box"
+         position="-6 0.5 -8"
+         width="1"
+         height="1"
+         depth="1"
+         color="#5a3a1a"></a-box>
+
+  <!-- ΚΛΕΙΔΙ (ΚΡΥΦΟ) -->
   <a-cylinder id="key"
-              position="0 4 -18"
+              position="-6 1 -8"
               radius="0.05"
               height="0.3"
               color="gold"
+              visible="false"
               pickable></a-cylinder>
 
   <!-- ΦΑΚΟΣ -->
@@ -148,14 +163,9 @@
     <a-light type="spot" intensity="0.8" angle="25" position="0 0.3 0"></a-light>
   </a-cylinder>
 
-  <!-- ΑΝΤΙΚΕΙΜΕΝΑ -->
-  <a-box position="-4 0.5 -4" color="#8b4513" interactable></a-box>
-  <a-box position="6 1 -4" color="brown" movable></a-box>
-  <a-box position="4 0.5 4" color="#5a3a1a" fallable></a-box>
-
   <!-- ΜΗΝΥΜΑ -->
   <a-text id="msg"
-          value="Βρες τον φακό και το κλειδί"
+          value="Βρες τον φακό"
           position="-2 2 -3"
           width="4"
           color="white"></a-text>
@@ -166,7 +176,7 @@
           color="red"
           timer></a-text>
 
-  <!-- PLAYER (ΔΕΝ ΑΙΩΡΕΙΤΑΙ) -->
+  <!-- PLAYER -->
   <a-entity id="player" position="0 0 10">
     <a-cylinder static-body radius="0.3" height="1.6" position="0 0.8 0" visible="false"></a-cylinder>
     <a-entity camera look-controls wasd-controls position="0 1.6 0">
