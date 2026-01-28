@@ -2,92 +2,127 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Escape Room A-Frame</title>
+  <title>Mini Escape Room VR</title>
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+  <script>
+    let hasKey = false;
+    let timeLeft = 30;
+
+    AFRAME.registerComponent('pick-key', {
+      init: function () {
+        this.el.addEventListener('click', () => {
+          hasKey = true;
+          this.el.setAttribute('visible', false);
+
+          document.querySelector('#door')
+            .setAttribute('color', 'green');
+
+          document.querySelector('#message')
+            .setAttribute('value', 'Πήρες το κλειδί! Η πόρτα ξεκλειδώθηκε.');
+
+          document.querySelector('#keySound').components.sound.playSound();
+        });
+      }
+    });
+
+    AFRAME.registerComponent('open-door', {
+      init: function () {
+        this.el.addEventListener('click', () => {
+          if (hasKey) {
+            this.el.setAttribute('rotation', '0 90 0');
+            document.querySelector('#message')
+              .setAttribute('value', 'Συγχαρητήρια! Διέφυγες!');
+
+            document.querySelector('#doorSound').components.sound.playSound();
+          } else {
+            document.querySelector('#message')
+              .setAttribute('value', 'Χρειάζεσαι κλειδί!');
+          }
+        });
+      }
+    });
+
+    AFRAME.registerComponent('timer', {
+      init: function () {
+        const el = this.el;
+        setInterval(() => {
+          if (timeLeft > 0) {
+            timeLeft--;
+            el.setAttribute('value', 'Χρόνος: ' + timeLeft);
+          } else {
+            el.setAttribute('value', 'Τέλος χρόνου!');
+            document.querySelector('#message')
+              .setAttribute('value', 'Απέτυχες να δραπετεύσεις...');
+          }
+        }, 1000);
+      }
+    });
+  </script>
 </head>
 
 <body>
-<a-scene>
+  <a-scene>
 
-  <!-- ⏱️ TIMER -->
-  <a-text id="timer" value="Χρόνος: 60"
-          position="-1 2 -3"
-          color="red"></a-text>
+    <!-- Assets (ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ) -->
+    <a-assets>
+      <audio id="key-audio" src="https://cdn.aframe.io/basic-guide/audio/click.ogg"></audio>
+      <audio id="door-audio" src="https://cdn.aframe.io/basic-guide/audio/door.ogg"></audio>
+    </a-assets>
 
-  <!-- 👤 PLAYER -->
-  <a-entity id="player"
-            position="0 1.6 4"
-            camera
-            look-controls
-            wasd-controls></a-entity>
+    <!-- Φωτισμός -->
+    <a-light type="ambient" intensity="0.5"></a-light>
+    <a-light type="point" position="0 4 2" intensity="1"></a-light>
 
-  <!-- 🟫 FLOOR -->
-  <a-plane rotation="-90 0 0"
-           width="10"
-           height="10"
-           color="#555"></a-plane>
+    <!-- Ήχοι -->
+    <a-entity id="keySound" sound="src: #key-audio"></a-entity>
+    <a-entity id="doorSound" sound="src: #door-audio"></a-entity>
 
-  <!-- 🧱 WALLS -->
-  <a-box position="0 1 -5" width="10" height="3" depth="0.2" color="#888"></a-box>
-  <a-box position="0 1 5"  width="10" height="3" depth="0.2" color="#888"></a-box>
-  <a-box position="-5 1 0" width="0.2" height="3" depth="10" color="#888"></a-box>
-  <a-box position="5 1 0"  width="0.2" height="3" depth="10" color="#888"></a-box>
+    <!-- Πάτωμα -->
+    <a-plane rotation="-90 0 0" width="10" height="10" color="#7BC8A4"></a-plane>
 
-  <!-- 🪑 OBSTACLES -->
-  <a-box position="-2 0.5 0" width="1" height="1" depth="1" color="#8b5a2b"></a-box>
-  <a-box position="2 0.5 -1" width="1.5" height="0.7" depth="1" color="#654321"></a-box>
+    <!-- Τοίχος -->
+    <a-box position="0 1 -4" width="10" height="2" depth="0.2" color="#AAA"></a-box>
 
-  <!-- 🔑 KEY -->
-  <a-sphere id="key"
-            position="0 0.5 -3"
-            radius="0.2"
-            color="gold"></a-sphere>
+    <!-- Πόρτα -->
+    <a-box id="door"
+           position="0 1 -3.9"
+           width="1"
+           height="2"
+           depth="0.1"
+           color="brown"
+           open-door>
+    </a-box>
 
-  <!-- 🚪 DOOR -->
-  <a-box id="door"
-         position="0 1 -4.9"
-         width="1"
-         height="2"
-         depth="0.1"
-         color="brown"></a-box>
+    <!-- Κλειδί -->
+    <a-box position="2 0.5 -2"
+           width="0.3"
+           height="0.3"
+           depth="0.1"
+           color="gold"
+           pick-key>
+    </a-box>
 
-</a-scene>
+    <!-- Μήνυμα -->
+    <a-text id="message"
+            value="Βρες το κλειδί για να φύγεις!"
+            position="-1.5 2 -2"
+            color="black"
+            width="4">
+    </a-text>
 
-<script>
-let time = 60;
-let hasKey = false;
+    <!-- Χρονόμετρο -->
+    <a-text position="1.2 2 -2"
+            color="red"
+            width="4"
+            timer>
+    </a-text>
 
-const timerText = document.getElementById("timer");
-const key = document.getElementById("key");
-const door = document.getElementById("door");
-const player = document.getElementById("player");
+    <!-- Κάμερα -->
+    <a-camera position="0 1.6 3">
+      <a-cursor></a-cursor>
+    </a-camera>
 
-setInterval(() => {
-  time--;
-  timerText.setAttribute("value", "Χρόνος: " + time);
-  if (time <= 0) {
-    alert("⏱️ Τέλος χρόνου!");
-    location.reload();
-  }
-}, 1000);
-
-// Pick up key
-key.addEventListener("mouseenter", () => {
-  hasKey = true;
-  key.setAttribute("visible", "false");
-  alert("🔑 Πήρες το κλειδί!");
-});
-
-// Door logic
-door.addEventListener("mouseenter", () => {
-  if (hasKey) {
-    alert("🎉 ESCAPED!");
-    location.reload();
-  } else {
-    alert("❌ Χρειάζεσαι το κλειδί!");
-  }
-});
-</script>
-
+  </a-scene>
 </body>
 </html>
