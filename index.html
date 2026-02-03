@@ -1,1 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Mini Escape Room</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+</head>
+
+<body>
+<a-scene>
+
+  <!-- ΦΩΤΙΣΜΟΣ -->
+  <a-light type="ambient" intensity="0.5"></a-light>
+  <a-light type="point" intensity="1" position="0 3 2"></a-light>
+
+  <!-- ΔΩΜΑΤΙΟ -->
+  <a-plane rotation="-90 0 0" width="12" height="12" color="#555"></a-plane>
+  <a-box position="0 2 -6" depth="12" height="4" width="12"
+         material="side: back" color="#888"></a-box>
+
+  <!-- ΠΟΡΤΑ -->
+  <a-box id="door"
+         position="0 1 -5.9"
+         width="1"
+         height="2"
+         depth="0.1"
+         color="red"
+         door></a-box>
+
+  <!-- ΚΛΕΙΔΙ -->
+  <a-cylinder id="key"
+              position="3 0.3 -2"
+              radius="0.05"
+              height="0.3"
+              color="orange"
+              key></a-cylinder>
+
+  <!-- ΜΗΝΥΜΑ -->
+  <a-text id="msg"
+          value="Find the key to unlock the door"
+          position="0 2.2 -2"
+          align="center"
+          width="5"
+          color="white"></a-text>
+
+  <!-- CAMERA + MOVEMENT -->
+  <a-camera position="0 1.6 4" wasd-controls look-controls>
+    <a-cursor></a-cursor>
+  </a-camera>
+
+</a-scene>
+
+<script>
+let hasKey = false;
+
+// ΚΛΕΙΔΙ
+AFRAME.registerComponent('key', {
+  init: function () {
+    this.el.addEventListener('click', () => {
+      hasKey = true;
+      this.el.setAttribute('visible', false);
+
+      document.getElementById('door')
+        .setAttribute('color', 'gray');
+
+      document.getElementById('msg')
+        .setAttribute('value', 'You found the key! Door unlocked.');
+    });
+  }
+});
+
+// ΠΟΡΤΑ
+AFRAME.registerComponent('door', {
+  init: function () {
+    this.el.addEventListener('click', () => {
+      if (hasKey) {
+        this.el.setAttribute('color', 'green');
+        document.getElementById('msg')
+          .setAttribute('value', 'Door opened! You escaped 🎉');
+      } else {
+        document.getElementById('msg')
+          .setAttribute('value', 'The door is locked...');
+      }
+    });
+  }
+});
+</script>
+
+</body>
+</html>
 
