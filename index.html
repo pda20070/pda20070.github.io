@@ -1,4 +1,3 @@
-```html name=index.html url=https://github.com/pda20070/pda20070.github.io/blob/388d6a584f99b5133f745295156876b006c0446e/index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,7 +35,7 @@
 
   <!-- MESSAGE & INVENTORY -->
   <a-text id="msg"
-          value="Find and solve all puzzles to open the door. (Click objects)"
+          value="Find and solve all puzzles to open the door. (Click objects or type digits for the safe)"
           position="0 2.4 -2"
           align="center"
           width="7"
@@ -162,7 +161,6 @@ const State = {
   markSolved(puzzle) {
     this.puzzlesSolved[puzzle] = true;
     updateMessage("Solved: " + puzzle + ". " + this.solvedSummary());
-    // checkAllSolved removed earlier reference; keep door logic in door component
   },
   solvedSummary() {
     const pairs = Object.entries(this.puzzlesSolved).map(([k,v]) => `${k}:${v? '✓':'✗'}`);
@@ -212,12 +210,12 @@ AFRAME.registerComponent('pickable', {
   }
 });
 
-/* BOOK: clickable clue */
+/* BOOK: clickable clue (updated to clearly show the code) */
 AFRAME.registerComponent('book', {
   init: function () {
     this.el.addEventListener('click', () => {
-      // Gives a clue for the safe code and for Simon (first color)
-      updateMessage('The book says: "Pi (3.1) hides the safe (first digits). The first Simon color is red."');
+      // Clear explicit hint for the safe, as requested
+      updateMessage('The book says: "Safe code: 314"');
     });
   }
 });
@@ -258,7 +256,7 @@ AFRAME.registerComponent('safe', {
         return;
       }
       this.input += digit;
-      updateMessage('Safe input: ' + this.input + ' (use keypad for reliable input)');
+      updateMessage('Safe input: ' + this.input + ' (use keypad or type digits)');
       if (this.input.length >= this.code.length) {
         this.check(this.input);
         this.input = '';
@@ -266,7 +264,9 @@ AFRAME.registerComponent('safe', {
     });
   },
   check: function(entry) {
-    if (entry === this.code) {
+    // normalize entry by removing non-digits to tolerate "3.14" etc.
+    const normalized = (entry + '').replace(/\D/g, '');
+    if (normalized === this.code) {
       updateMessage('Safe opened! A key appears.');
       // reveal the goldKey entity
       const key = document.getElementById('goldKey');
@@ -450,11 +450,44 @@ document.querySelector('a-scene').addEventListener('loaded', () => {
   });
 });
 
+/* KEYBOARD support for the safe:
+   - digits 0-9 append to the safe input
+   - Backspace removes last digit
+   - Enter submits current input
+*/
+document.addEventListener('keydown', (e) => {
+  const key = e.key;
+  const safeEl = document.getElementById('safe');
+  const safeComp = safeEl && safeEl.components && safeEl.components['safe'];
+  if (!safeComp) return; // nothing to do if safe isn't ready
+  if (/^[0-9]$/.test(key)) {
+    // append digit
+    safeComp.input = (safeComp.input || '') + key;
+    updateMessage('Safe input: ' + safeComp.input + ' (type digits or use keypad)');
+    if (safeComp.input.length >= (safeComp.code ? safeComp.code.length : 3)) {
+      safeComp.check(safeComp.input);
+      safeComp.input = '';
+    }
+    return;
+  }
+  if (key === 'Enter') {
+    if ((safeComp.input || '').length > 0) {
+      safeComp.check(safeComp.input);
+      safeComp.input = '';
+    }
+    return;
+  }
+  if (key === 'Backspace') {
+    safeComp.input = (safeComp.input || '').slice(0, -1);
+    updateMessage('Safe input: ' + (safeComp.input || '(empty)'));
+    return;
+  }
+});
+
 /* initialize message & inventory */
-updateMessage('Find and solve all puzzles: safe, switches, Simon. Look for clues (e.g. the book).');
+updateMessage('Find and solve all puzzles: safe, switches, Simon. You can type digits (0-9) to enter the safe code.');
 updateInventoryText();
 </script>
 
 </body>
 </html>
-```
