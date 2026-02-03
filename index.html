@@ -10,48 +10,49 @@
 <a-scene>
 
   <!-- ΦΩΤΙΣΜΟΣ -->
-  <a-light type="ambient" intensity="0.5"></a-light>
+  <a-light type="ambient" intensity="1"></a-light>
   <a-light type="point" intensity="1" position="0 3 2"></a-light>
 
-  <!-- ΔΩΜΑΤΙΟ -->
+  <!-- ΠΑΤΩΜΑ -->
   <a-plane rotation="-90 0 0" width="12" height="12" color="#555"></a-plane>
-  <a-box position="0 2 -6" depth="12" height="4" width="12"
-         material="side: back" color="#888"></a-box>
 
-  <!-- ΠΟΡΤΑ (wrapped to create a hinge pivot at the left edge) -->
-  <!-- The wrapper's position is set to the left edge of the door so rotating the wrapper will act like a hinged door -->
-  <a-entity id="doorWrapper" position="-0.5 1 -5.9" rotation="0 0 0" door>
-    <a-box id="door"
-           position="0.5 0 0"
-           width="1"
-           height="2"
-           depth="0.1"
-           color="red"></a-box>
-  </a-entity>
+  <!-- ΤΟΙΧΟΙ -->
+  <a-plane position="0 2 -6" width="12" height="4" color="#888"></a-plane>
+  <a-plane position="-6 2 0" rotation="0 90 0" width="12" height="4" color="#777"></a-plane>
+  <a-plane position="6 2 0" rotation="0 -90 0" width="12" height="4" color="#777"></a-plane>
+  <a-plane position="0 2 6" rotation="0 180 0" width="12" height="4" color="#777"></a-plane>
 
-  <!-- ΚΛΕΙΔΙ (bobbing + spinning animation and larger size to be easier to target) -->
+  <!-- ΠΟΡΤΑ -->
+  <a-box id="door"
+         position="0 1 -5.8"
+         width="1"
+         height="2"
+         depth="0.1"
+         material="color: red; emissive: red; emissiveIntensity: 0.5"
+         door>
+  </a-box>
+
+  <!-- ΚΛΕΙΔΙ -->
   <a-cylinder id="key"
-              position="3 0.4 -2"
-              radius="0.08"
-              height="0.4"
-              color="orange"
-              key
-              scale="1.2 1.2 1.2"
-              animation__bob="property: position; to: 3 0.7 -2; dur: 900; dir: alternate; loop: true; easing: easeInOutSine"
-              animation__spin="property: rotation; to: 0 360 0; dur: 4000; loop: true; easing: linear"
-              animation__hover="property: scale; to: 1.5 1.5 1.5; dur: 500; dir: alternate; loop: true; easing: easeInOutSine"></a-cylinder>
+              position="3 0.3 -2"
+              radius="0.05"
+              height="0.3"
+              material="color: gold; emissive: yellow; emissiveIntensity: 1"
+              key>
+  </a-cylinder>
 
   <!-- ΜΗΝΥΜΑ -->
   <a-text id="msg"
           value="Find the key to unlock the door"
-          position="0 2.2 -2"
+          position="0 2.3 -2"
           align="center"
           width="5"
-          color="white"></a-text>
+          color="white">
+  </a-text>
 
-  <!-- CAMERA + MOVEMENT -->
+  <!-- CAMERA -->
   <a-camera position="0 1.6 4" wasd-controls look-controls>
-    <a-cursor></a-cursor>
+    <a-cursor color="yellow"></a-cursor>
   </a-camera>
 
 </a-scene>
@@ -59,59 +60,47 @@
 <script>
 let hasKey = false;
 
-// ΚΛΕΙΔΙ
+/* KEY */
 AFRAME.registerComponent('key', {
   init: function () {
-    // small visual/audio affordances could be added here (e.g. sound on pickup)
     this.el.addEventListener('click', () => {
-      if (hasKey) return; // guard in case of repeated clicks
+
       hasKey = true;
       this.el.setAttribute('visible', false);
 
-      // change door color to indicate unlocked
-      const innerDoor = document.getElementById('door');
-      if (innerDoor) innerDoor.setAttribute('color', 'gray');
+      const door = document.getElementById("door");
 
-      const msg = document.getElementById('msg');
-      if (msg) msg.setAttribute('value', 'You found the key! Door unlocked.');
+      // Πόρτα γίνεται ΠΟΡΤΟΚΑΛΙ όταν ξεκλειδώνει
+      door.setAttribute(
+        "material",
+        "color: orange; emissive: orange; emissiveIntensity: 1"
+      );
+
+      document.getElementById("msg")
+        .setAttribute("value", "You picked up the key! Door unlocked 🔓");
     });
   }
 });
 
-// ΠΟΡΤΑ (hinge-style opening performed by rotating the wrapper)
+/* DOOR */
 AFRAME.registerComponent('door', {
   init: function () {
-    // `this.el` is the wrapper (doorWrapper). The inner door box has id="door".
-    const wrapper = this.el;
-    const innerDoor = document.getElementById('door');
+    this.el.addEventListener('click', () => {
 
-    // Prepare the open animation on the wrapper so it rotates like a hinge
-    wrapper.setAttribute('animation__open', {
-      property: 'rotation',
-      to: '0 -90 0',
-      dur: 800,
-      easing: 'easeInOutQuad',
-      autoplay: false
-    });
-
-    // When the wrapper (or its child) is clicked, check key and animate
-    wrapper.addEventListener('click', () => {
-      if (hasKey) {
-        // play the hinge open animation
-        if (wrapper.components && wrapper.components.animation__open) {
-          wrapper.components.animation__open.play();
-        } else {
-          // fallback: set rotation directly
-          wrapper.setAttribute('rotation', '0 -90 0');
-        }
-
-        if (innerDoor) innerDoor.setAttribute('color', 'green');
-        const msg = document.getElementById('msg');
-        if (msg) msg.setAttribute('value', 'Door opened! You escaped 🎉');
-      } else {
-        const msg = document.getElementById('msg');
-        if (msg) msg.setAttribute('value', 'The door is locked...');
+      if (!hasKey) {
+        document.getElementById("msg")
+          .setAttribute("value", "The door is locked... Find the key!");
+        return;
       }
+
+      // Πόρτα γίνεται ΠΡΑΣΙΝΗ όταν ανοίγει
+      this.el.setAttribute(
+        "material",
+        "color: lime; emissive: lime; emissiveIntensity: 1"
+      );
+
+      document.getElementById("msg")
+        .setAttribute("value", "Door opened! You escaped 🎉");
     });
   }
 });
